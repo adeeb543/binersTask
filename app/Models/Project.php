@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Project extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'title',
+        'description',
+        'status',
+    ];
 
     public function user(): BelongsTo
     {

@@ -7,7 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProjectFile extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'project_id',
+        'file_name',
+        'file_path',
+        'file_type',
+        'file_size',
+    ];
 
     public function project(): BelongsTo
     {
