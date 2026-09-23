@@ -2,9 +2,9 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\ProjectFile;
-use App\Repositories\FileRepositoryInterface;
+use App\Repositories\ProjectFileRepositoryInterface;
 
-class FileRepository implements FileRepositoryInterface
+class ProjectFileRepository implements ProjectFileRepositoryInterface
 {
     public function create(array $data): ProjectFile
     {
@@ -13,7 +13,6 @@ class FileRepository implements FileRepositoryInterface
 
     public function findByIdAndUser(int $fileId, int $userId): ?ProjectFile
     {
-        // نتأكد أن الملف يتبع لمشروع يملكه هذا المستخدم حصرياً
         return ProjectFile::where('id', $fileId)
             ->whereHas('project', function ($query) use ($userId) {
                 $query->where('user_id', $userId);

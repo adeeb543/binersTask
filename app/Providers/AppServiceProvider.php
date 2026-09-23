@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use ProjectFileRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,8 +18,8 @@ class AppServiceProvider extends ServiceProvider
 );
 
 $this->app->bind(
-    \App\Repositories\FileRepositoryInterface::class,
-    \App\Repositories\Eloquent\FileRepository::class
+    \App\Repositories\ProjectFileRepositoryInterface::class,
+    \App\Repositories\Eloquent\ProjectFileRepository::class
 );
 
     }

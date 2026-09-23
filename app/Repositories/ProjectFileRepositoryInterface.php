@@ -3,7 +3,7 @@ namespace App\Repositories;
 
 use App\Models\ProjectFile;
 
-interface FileRepositoryInterface
+interface ProjectFileRepositoryInterface
 {
     public function create(array $data): ProjectFile;
     public function findByIdAndUser(int $fileId, int $userId): ?ProjectFile;

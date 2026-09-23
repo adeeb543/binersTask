@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\User\ProjectController;
+use App\Http\Controllers\User\ProjectFileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,3 +31,12 @@ Route::controller(AuthController::class)->prefix('auth')
     Route::post('/{id}',  'update')->name('update');
     Route::delete('/{id}', 'destroy')->name('destroy');
 });
+
+Route::controller(ProjectFileController::class)
+    ->middleware('auth:sanctum')
+    ->prefix('projects/{projectId}/files')
+    ->group(function () {
+        Route::post('/', 'store');
+       // Route::get('/{fileId}/download', 'download');
+        Route::delete('/{fileId}', 'destroy');
+    });
