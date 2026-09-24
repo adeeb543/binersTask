@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Dashboard\Auth\LoginController;
 use App\Http\Controllers\Dashboard\DashboardProjectController;
+use App\Http\Controllers\Dashboard\StudyController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(LoginController::class)
@@ -19,6 +20,26 @@ Route::controller(DashboardProjectController::class)
 ->group(function () {
 
     Route::get('/', 'index')->name('index');
+    Route::get('/{id}', 'show')->name('show');
+
     Route::post('/{id}/status', 'updateStatus')->name('updateStatus');
+
+});
+
+
+
+Route::controller(StudyController::class)
+->prefix('admin')
+->name('admin.')
+->middleware(['auth:admin'])
+->group(function () {
+
+    // إنشاء دراسة جديدة مرتبطة بمشروع محدد
+    Route::get('/projects/{project}/studies/create',  'create')->name('studies.create');
+    Route::post('/projects/{project}/studies',  'store')->name('studies.store');
+
+    // تعديل وتحديث الدراسة الحالية عبر ID الدراسة نفسها
+    Route::get('/studies/{study}/edit',  'edit')->name('studies.edit');
+    Route::put('/studies/{study}',  'update')->name('studies.update');
 
 });

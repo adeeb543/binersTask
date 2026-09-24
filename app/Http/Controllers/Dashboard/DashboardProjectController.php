@@ -27,6 +27,14 @@ class DashboardProjectController extends Controller
         return view('dashboard.projects.index', compact('projects'));
     }
 
+
+
+
+    public function show($id)
+{
+    $project = Project::with(['user', 'files', 'discussions', 'study', 'quotation', 'activities'])->findOrFail($id);
+    return view('dashboard.projects.show', compact('project'));
+}
     /**
      * تحديث حالة المشروع من الداشبورد
      */

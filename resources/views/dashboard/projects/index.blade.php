@@ -1,4 +1,4 @@
-@extends('layouts.app') {{-- أو التيمبليت الخاص بالداشبورد عندك --}}
+@extends('dashboard.layouts.app') {{-- أو التيمبليت الخاص بالداشبورد عندك --}}
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
@@ -22,7 +22,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($projects as $project)
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $project->name ?? 'مشروع #' . $project->id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $project->title ?? 'مشروع #' . $project->id }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 @if($project->status == 'completed') bg-green-100 text-green-800
@@ -34,9 +34,9 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {{-- فورم تغيير الحالة مع التحديث الفوري --}}
-                            <form action="{{ route('dashboard.projects.updateStatus', $project->id) }}" method="POST">
+                            <form action="{{ route('admin.projects.updateStatus', $project->id) }}" method="POST">
                                 @csrf
-                                @method('PATCH')
+                                @method('POST')
                                 <select name="status" onchange="this.form.submit()" class="border rounded px-2 py-1 text-sm">
                                     <option value="pending" {{ $project->status == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
                                     <option value="in_progress" {{ $project->status == 'in_progress' ? 'selected' : '' }}>قيد التنفيذ</option>
@@ -44,6 +44,15 @@
                                     <option value="rejected" {{ $project->status == 'rejected' ? 'selected' : '' }}>مرفوض</option>
                                 </select>
                             </form>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <!-- زر عرض تفاصيل الطلب -->
+                                <a href="{{ route('admin.projects.show', $project->id) }}"
+                                    class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm">
+                                     عرض التفاصيل
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
