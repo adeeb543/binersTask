@@ -31,4 +31,27 @@ class ProjectRepository implements ProjectRepositoryInterface
     {
         return $project->delete();
     }
+
+
+
+
+    public function getPaginated($perPage = 10)
+    {
+        return Project::latest()->paginate($perPage);
+    }
+
+    public function findByIdWithRelations($id, array $relations = [])
+    {
+        return Project::with($relations)->findOrFail($id);
+    }
+
+    public function updateStatus($id, string $status)
+    {
+        $project = Project::findOrFail($id);
+        $project->update([
+            'status' => $status
+        ]);
+
+        return $project;
+    }
 }

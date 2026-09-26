@@ -134,18 +134,70 @@
 
             <!-- قسم النقاشات / التعليقات (Discussions Relation) -->
             <div class="bg-white p-6 rounded-lg shadow-sm space-y-4">
-                <h3 class="text-lg font-bold text-gray-800 border-b pb-2">النقاشات والملاحظات</h3>
-                <div class="space-y-3">
-                    @forelse($project->discussions as $discussion)
-                        <div class="bg-gray-50 p-3 rounded text-sm">
-                            <p class="text-gray-700">{{ $discussion->body ?? $discussion->message ?? '' }}</p>
-                            <span class="text-xs text-gray-400 mt-1 block">{{ $discussion->created_at->diffForHumans() }}</span>
-                        </div>
-                    @empty
-                        <p class="text-gray-400 text-sm">لا توجد نقاشات بعد.</p>
-                    @endforelse
+    <h3 class="text-lg font-bold text-gray-800 border-b pb-2">النقاشات والملاحظات</h3>
+
+    <!-- قائمة عرض النقاشات والرسائل -->
+    <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+        @forelse($project->discussions as $discussion)
+            <div class="p-4 rounded-lg text-sm border {{ $discussion->sender_type == App\Models\Admin::class ? 'bg-blue-50 border-blue-100 mr-6' : 'bg-gray-50 border-gray-200 ml-6' }}">
+
+                <!-- معلومات المرسل والوقت -->
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-semibold text-xs text-gray-600">
+                        {{ $discussion->sender->name ?? 'مستخدم' }}
+                        <span class="text-[10px] text-gray-400">({{ $discussion->sender_type == App\Models\Admin::class ? 'مشرف' : 'عميل' }})</span>
+                    </span>
+                    <span class="text-xs text-gray-400">{{ $discussion->created_at->diffForHumans() }}</span>
                 </div>
+
+                <!-- نص الرسالة -->
+                @if($discussion->message)
+                    <p class="text-gray-700 whitespace-pre-line mt-1">{{ $discussion->message }}</p>
+                @endif
+
+                <!-- عرض الملف المرفق إن وجد -->
+                @if($discussion->file_path)
+                    <div class="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between">
+                        <a href="{{ asset('storage/' . $discussion->file_path) }}" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                            📎 {{ $discussion->file_name ?? 'تحميل المرفق' }}
+                        </a>
+                    </div>
+                @endif
             </div>
+        @empty
+            <p class="text-gray-400 text-sm text-center py-4">لا توجد نقاشات أو طلبات بعد.</p>
+        @endforelse
+    </div>
+
+    <!-- نموذج إرسال رسالة أو طلب جديد -->
+    <div class="mt-6 pt-4 border-t border-gray-100">
+        <form action="{{ route('admin.projects.discussions.store', $project->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+            @csrf
+
+            <div>
+                <textarea name="message" rows="2" placeholder="اكتب ملاحظة أو طلباً للعميل..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border">{{ old('message') }}</textarea>
+                @error('message')
+                    <span class="text-xs text-red-500">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="flex items-center justify-between gap-4">
+                <!-- رفع ملف -->
+                <div class="flex-1">
+                    <input type="file" name="file" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    @error('file')
+                        <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <!-- زر الإرسال -->
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                    إرسال
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
             <!-- قسم التحديثات أو النشاطات (Activities Relation) -->
             <div class="bg-white p-6 rounded-lg shadow-sm space-y-4">

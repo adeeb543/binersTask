@@ -22,19 +22,27 @@ class DashboardProjectController extends Controller
      */
     public function index()
     {
-        $projects = Project::latest()->paginate(10);
+        // استخدام دالة من الـ Service بدلاً من الاستعلام المباشر (يمكنك إضافتها للـ Service إذا لم تكن موجودة)
+        $projects = $this->projectService->getAllProjectsForDashboard(10);
 
         return view('dashboard.projects.index', compact('projects'));
     }
 
-
-
-
+    /**
+     * عرض تفاصيل المشروع مع علاقاته
+     */
     public function show($id)
-{
-    $project = Project::with(['user', 'files', 'discussions', 'study', 'quotation', 'activities'])->findOrFail($id);
-    return view('dashboard.projects.show', compact('project'));
-}
+    {
+        // جلب المشروع مع العلاقات عبر الـ Service
+        $project = $this->projectService->getProjectDetailsForAdmin($id);
+
+        if (! $project) {
+            abort(404, 'المشروع غير موجود');
+        }
+
+        return view('dashboard.projects.show', compact('project'));
+    }
+
     /**
      * تحديث حالة المشروع من الداشبورد
      */
@@ -44,10 +52,8 @@ class DashboardProjectController extends Controller
             'status' => 'required|in:pending,in_progress,completed,rejected',
         ]);
 
-        $project = Project::findOrFail($id);
-        $project->update([
-            'status' => $request->status
-        ]);
+        // تمرير العملية للـ Service لتحديث الحالة ومنطقها البرمجي
+        $this->projectService->updateProjectStatus($id, $request->status);
 
         return redirect()->back()->with('success', 'تم تحديث حالة المشروع بنجاح');
     }

@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Repositories\Eloquent\ProjectDiscussionRepository;
+use App\Repositories\Eloquent\StudyRepository;
+use App\Repositories\ProjectDiscussionRepositoryInterface;
+use App\Repositories\StudyRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 use ProjectFileRepository;
 
@@ -21,7 +25,8 @@ $this->app->bind(
     \App\Repositories\ProjectFileRepositoryInterface::class,
     \App\Repositories\Eloquent\ProjectFileRepository::class
 );
-
+$this->app->bind(StudyRepositoryInterface::class, StudyRepository::class);
+$this->app->bind(ProjectDiscussionRepositoryInterface::class, ProjectDiscussionRepository::class);
     }
 
     /**

@@ -61,4 +61,34 @@ class ProjectService
             $this->projectRepository->delete($project);
         });
     }
+
+
+
+
+
+
+
+    public function getAllProjectsForDashboard($perPage = 10)
+    {
+        return $this->projectRepository->getPaginated($perPage);
+    }
+
+    /**
+     * جلب تفاصيل المشروع مع كافة العلاقات اللازمة للإدارة
+     */
+    public function getProjectDetailsForAdmin($id)
+    {
+        $relations = ['user', 'files', 'discussions', 'study', 'quotation', 'activities'];
+
+        return $this->projectRepository->findByIdWithRelations($id, $relations);
+    }
+
+    /**
+     * تحديث حالة المشروع مع إمكانية إضافة منطق إضافي مستقبلاً (مثل إشعارات أو أنشطة)
+     */
+    public function updateProjectStatus($id, string $status)
+    {
+        // مستقبلاً يمكنك إضافة تسجيل نشاط (Activity) أو إرسال إشعار هنا بكل سهولة
+        return $this->projectRepository->updateStatus($id, $status);
+    }
 }
