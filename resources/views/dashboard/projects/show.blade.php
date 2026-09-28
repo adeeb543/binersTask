@@ -132,8 +132,8 @@
                 </div>
             </div>
 
-            <!-- قسم النقاشات / التعليقات (Discussions Relation) -->
-            <div class="bg-white p-6 rounded-lg shadow-sm space-y-4">
+         <!-- قسم النقاشات / التعليقات (Discussions Relation) -->
+    <div class="bg-white p-6 rounded-lg shadow-sm space-y-4">
     <h3 class="text-lg font-bold text-gray-800 border-b pb-2">النقاشات والملاحظات</h3>
 
     <!-- قائمة عرض النقاشات والرسائل -->
@@ -147,7 +147,20 @@
                         {{ $discussion->sender->name ?? 'مستخدم' }}
                         <span class="text-[10px] text-gray-400">({{ $discussion->sender_type == App\Models\Admin::class ? 'مشرف' : 'عميل' }})</span>
                     </span>
-                    <span class="text-xs text-gray-400">{{ $discussion->created_at->diffForHumans() }}</span>
+
+                    <!-- الوقت وزر الحذف -->
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-400">{{ $discussion->created_at->diffForHumans() }}</span>
+
+                        <!-- زر حذف الرسالة -->
+                        <form action="{{ route('admin.projects.discussions.destroy', [$project->id, $discussion->id]) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه الرسالة؟');" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-500 hover:text-red-700 text-xs transition p-1" title="حذف الرسالة">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- نص الرسالة -->

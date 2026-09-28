@@ -37,8 +37,8 @@ class StudyService
     /**
      * جلب دراسة عبر الـ ID
      */
-    public function getStudyById(int $id)
-    {
-        return $this->studyRepository->findById($id);
-    }
+    public function getProjectStudy(int $projectId)
+{
+    return $this->studyRepository->findByProjectId($projectId);
+}
 }

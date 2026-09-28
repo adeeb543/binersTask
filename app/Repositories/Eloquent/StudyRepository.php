@@ -7,10 +7,10 @@ use App\Repositories\StudyRepositoryInterface;
 
 class StudyRepository implements StudyRepositoryInterface
 {
-    public function findById(int $id): ?Study
-    {
-        return Study::with('project')->find($id);
-    }
+    public function findByProjectId(int $projectId): ?Study
+{
+    return Study::where('project_id', $projectId)->first();
+}
 
     public function create(array $data): Study
     {

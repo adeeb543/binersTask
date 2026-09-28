@@ -19,4 +19,12 @@ class ProjectDiscussionRepository implements ProjectDiscussionRepositoryInterfac
     {
         return ProjectDiscussion::create($data);
     }
+
+
+   public function delete(int $id): bool
+{
+    $discussion = ProjectDiscussion::findOrFail($id);
+    return $discussion->delete();
+}
+
 }

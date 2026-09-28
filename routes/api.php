@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\User\ProjectController;
+use App\Http\Controllers\User\ProjectDiscussionController;
 use App\Http\Controllers\User\ProjectFileController;
+use App\Http\Controllers\User\StudyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,3 +42,18 @@ Route::controller(ProjectFileController::class)
        // Route::get('/{fileId}/download', 'download');
         Route::delete('/{fileId}', 'destroy');
     });
+
+
+
+    Route::controller(ProjectDiscussionController::class)
+    ->middleware('auth:sanctum')
+    ->prefix('projects/{project}/discussions')
+    ->group(function () {
+    Route::get('/', 'index');
+    Route::post('/',  'store');
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/projects/{projectId}/studies', [StudyController::class, 'index']);
+});

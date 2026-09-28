@@ -33,4 +33,13 @@ class ProjectDiscussionController extends Controller
 
         return view('dashboard.projects.show', compact('project', 'discussions'));
     }
+
+
+    public function destroy($projectId, $discussionId)
+{
+    // استدعاء السيرفيس مباشرة لحذف المناقشة (والتي ستقوم بحذف الملف من التخزين والسجل من القاعدة)
+    $this->discussionService->delete($discussionId);
+
+    return redirect()->back()->with('success', 'تم حذف الرسالة بنجاح');
+}
 }

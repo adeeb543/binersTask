@@ -25,7 +25,7 @@ class StoreProjectDiscussionRequest extends FormRequest
 
             return [
             'message' => 'nullable|string|required_without:file|max:255',
-            'file'    => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,zip|required_without:message',
+            'file'    => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,webp,png,zip|required_without:message',
         ];
 
     }

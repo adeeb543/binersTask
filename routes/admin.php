@@ -57,4 +57,7 @@ Route::middleware(['auth:admin'])
    // مسار إرسال رسالة أو طلب جديد ضمن مناقشات المشروع
     Route::post('/projects/{project}/discussions', [ProjectDiscussionController::class, 'store'])
         ->name('projects.discussions.store');
+
+    Route::delete('projects/{project}/discussions/{discussion}', [ProjectDiscussionController::class, 'destroy'])
+    ->name('projects.discussions.destroy');
 });
