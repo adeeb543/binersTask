@@ -15,16 +15,23 @@ class ProjectDiscussionRepository implements ProjectDiscussionRepositoryInterfac
             ->get();
     }
 
+    public function findByProjectAndId(int $projectId, int $discussionId): ?ProjectDiscussion
+    {
+        return ProjectDiscussion::where('project_id', $projectId)
+            ->where('id', $discussionId)
+            ->with('project')
+            ->first();
+    }
+
     public function create(array $data): ProjectDiscussion
     {
         return ProjectDiscussion::create($data);
     }
 
+    public function deleteByProjectAndId(int $projectId, int $discussionId): bool
+    {
+        $discussion = $this->findByProjectAndId($projectId, $discussionId);
 
-   public function delete(int $id): bool
-{
-    $discussion = ProjectDiscussion::findOrFail($id);
-    return $discussion->delete();
-}
-
+        return $discussion ? $discussion->delete() : false;
+    }
 }

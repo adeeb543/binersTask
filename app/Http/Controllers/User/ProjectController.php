@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Project\StoreProjectRequest;
 use App\Http\Requests\Project\UpdateProjectRequest;
 use App\Services\ProjectService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    use AuthorizesRequests;
     protected ProjectService $projectService;
 
     public function __construct(ProjectService $projectService)
@@ -18,7 +20,7 @@ class ProjectController extends Controller
         $this->projectService = $projectService;
     }
 
-    // عرض جميع مشاريع المستخدم الحالي
+    // عرض جميع مشاريع المستخدم الحالي (التوقيع محفوظ 100%)
     public function index(Request $request): JsonResponse
     {
         $projects = $this->projectService->getUserProjects($request->user()->id);
@@ -44,7 +46,11 @@ class ProjectController extends Controller
     // عرض تفاصيل مشروع معين
     public function show(Request $request, int $id): JsonResponse
     {
-        $project = $this->projectService->getProjectDetails($id, $request->user()->id);
+        // 1. جلب المشروع من السيرفيس بالـ ID فقط
+        $project = $this->projectService->getProjectDetails($id);
+
+        // 2. التحقق من الصلاحية عبر البوليصي
+        $this->authorize('view', $project);
 
         return response()->json([
             'status' => true,
@@ -55,19 +61,33 @@ class ProjectController extends Controller
     // تحديث مشروع
     public function update(UpdateProjectRequest $request, int $id): JsonResponse
     {
-        $project = $this->projectService->updateProject($id, $request->validated(), $request->user()->id);
+        // 1. جلب المشروع للتأكد من وجوده
+        $project = $this->projectService->getProjectDetails($id);
+
+        // 2. التحقق من صلاحية التعديل
+        $this->authorize('update', $project);
+
+        // 3. التنفيذ عبر السيرفيس
+        $updatedProject = $this->projectService->updateProject($id, $request->validated());
 
         return response()->json([
             'status' => true,
             'message' => 'تم تحديث المشروع بنجاح',
-            'data' => $project
+            'data' => $updatedProject
         ]);
     }
 
     // حذف مشروع
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $this->projectService->deleteProject($id, $request->user()->id);
+        // 1. جلب المشروع للتأكد من وجوده
+        $project = $this->projectService->getProjectDetails($id);
+
+        // 2. التحقق من صلاحية الحذف
+        $this->authorize('delete', $project);
+
+        // 3. التنفيذ عبر السيرفيس
+        $this->projectService->deleteProject($id);
 
         return response()->json([
             'status' => true,

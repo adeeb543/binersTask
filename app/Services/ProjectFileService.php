@@ -7,7 +7,7 @@ use App\Repositories\ProjectRepositoryInterface;
 use App\Models\ProjectFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProjectFileService
 {
@@ -22,54 +22,49 @@ class ProjectFileService
         $this->projectRepository = $projectRepository;
     }
 
-    public function uploadFile(int $projectId, $uploadedFile, int $userId): ProjectFile
+    public function uploadFile(int $projectId, $uploadedFile): ProjectFile
     {
-        // 1. التحقق أن المشروع يخص المستخدم
-        $project = $this->projectRepository->findByIdAndUser($projectId, $userId);
+        $project = $this->projectRepository->findById($projectId);
 
         if (! $project) {
-            throw ValidationException::withMessages([
-                'project' => ['المشروع غير موجود أو ليس لديك صلاحية للوصول إليه.'],
-            ]);
+            throw new NotFoundHttpException('المشروع غير موجود.');
         }
 
         return DB::transaction(function () use ($projectId, $uploadedFile) {
-            // 2. تخزين الملف في التخزين العام
             $filePath = $uploadedFile->store('project_files', 'public');
             $fileName = $uploadedFile->getClientOriginalName();
-           // $fileType = $uploadedFile->getClientOriginalExtension();
             $fileSize = $uploadedFile->getSize();
 
-            // 3. حفظ السجل في قاعدة البيانات
             return $this->fileRepository->create([
                 'project_id' => $projectId,
                 'file_name' => $fileName,
                 'file_path' => $filePath,
-                //'file_type' => $fileType,
                 'file_size' => $fileSize,
             ]);
         });
     }
 
-    public function deleteFile(int $fileId, int $userId): void
+    public function getFileDetailsForProject(int $projectId, int $fileId): ProjectFile
     {
-        // التحقق أن الملف يتبع لمشروع يملكه المستخدم
-        $file = $this->fileRepository->findByIdAndUser($fileId, $userId);
+        $file = $this->fileRepository->findByProjectAndId($projectId, $fileId);
 
         if (! $file) {
-            throw ValidationException::withMessages([
-                'file' => ['الملف غير موجود أو ليس لديك صلاحية لحذفه.'],
-            ]);
+            throw new NotFoundHttpException('الملف غير موجود ضمن هذا المشروع.');
         }
 
-        DB::transaction(function () use ($file) {
-            // حذف الملف الفعلي من السيرفر
+        return $file;
+    }
+
+    public function deleteFile(int $projectId, int $fileId): void
+    {
+        $file = $this->getFileDetailsForProject($projectId, $fileId);
+
+        DB::transaction(function () use ($projectId, $fileId, $file) {
             if (Storage::disk('public')->exists($file->file_path)) {
                 Storage::disk('public')->delete($file->file_path);
             }
 
-            // حذف السجل من قاعدة البيانات
-            $this->fileRepository->delete($file);
+            $this->fileRepository->deleteByProjectAndId($projectId, $fileId);
         });
     }
 }

@@ -5,7 +5,7 @@ use App\Models\ProjectFile;
 
 interface ProjectFileRepositoryInterface
 {
+    public function findByProjectAndId(int $projectId, int $fileId): ?ProjectFile;
     public function create(array $data): ProjectFile;
-    public function findByIdAndUser(int $fileId, int $userId): ?ProjectFile;
-    public function delete(ProjectFile $file): bool;
+    public function deleteByProjectAndId(int $projectId, int $fileId): bool;
 }

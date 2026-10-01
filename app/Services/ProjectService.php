@@ -5,7 +5,7 @@ use App\Repositories\ProjectRepositoryInterface;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProjectService
 {
@@ -29,22 +29,21 @@ class ProjectService
         });
     }
 
-    public function getProjectDetails(int $id, int $userId): Project
+    // جلب المشروع بالـ ID فقط (الصلاحية تُفحص بالبوليصي في الكونترولر)
+    public function getProjectDetails(int $id): Project
     {
-        $project = $this->projectRepository->findByIdAndUser($id, $userId);
+        $project = $this->projectRepository->findById($id);
 
         if (! $project) {
-            throw ValidationException::withMessages([
-                'project' => ['المشروع غير موجود أو ليس لديك صلاحية للوصول إليه.'],
-            ]);
+            throw new NotFoundHttpException('المشروع غير موجود.');
         }
 
         return $project;
     }
 
-    public function updateProject(int $id, array $data, int $userId): Project
+    public function updateProject(int $id, array $data): Project
     {
-        $project = $this->getProjectDetails($id, $userId);
+        $project = $this->getProjectDetails($id);
 
         DB::transaction(function () use ($project, $data) {
             $this->projectRepository->update($project, $data);
@@ -53,42 +52,29 @@ class ProjectService
         return $project->fresh();
     }
 
-    public function deleteProject(int $id, int $userId): void
+    public function deleteProject(int $id): void
     {
-        $project = $this->getProjectDetails($id, $userId);
+        $project = $this->getProjectDetails($id);
 
         DB::transaction(function () use ($project) {
             $this->projectRepository->delete($project);
         });
     }
 
-
-
-
-
-
-
+    // دوال لوحة التحكم الخاصة بالأدمن (تبقى كما هي بكامل قوتها)
     public function getAllProjectsForDashboard($perPage = 10)
     {
         return $this->projectRepository->getPaginated($perPage);
     }
 
-    /**
-     * جلب تفاصيل المشروع مع كافة العلاقات اللازمة للإدارة
-     */
     public function getProjectDetailsForAdmin($id)
     {
         $relations = ['user', 'files', 'discussions', 'study', 'quotation', 'activities'];
-
         return $this->projectRepository->findByIdWithRelations($id, $relations);
     }
 
-    /**
-     * تحديث حالة المشروع مع إمكانية إضافة منطق إضافي مستقبلاً (مثل إشعارات أو أنشطة)
-     */
     public function updateProjectStatus($id, string $status)
     {
-        // مستقبلاً يمكنك إضافة تسجيل نشاط (Activity) أو إرسال إشعار هنا بكل سهولة
         return $this->projectRepository->updateStatus($id, $status);
     }
 }

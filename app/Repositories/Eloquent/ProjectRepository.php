@@ -12,10 +12,16 @@ class ProjectRepository implements ProjectRepositoryInterface
         return Project::where('user_id', $userId)->with('files')->latest()->get();
     }
 
-    public function findByIdAndUser(int $id, int $userId): ?Project
+    // دالة جديدة لجلب المشروع بالـ ID فقط مع علاقاته الأساسية
+    public function findById(int $id): ?Project
     {
-        return Project::where('id', $id)->where('user_id', $userId)->with('files')->first();
+        return Project::with('files')->find($id);
     }
+
+   // public function findByIdAndUser(int $id, int $userId): ?Project
+   // {
+     //   return Project::where('id', $id)->where('user_id', $userId)->with('files')->first();
+   // }
 
     public function create(array $data): Project
     {
@@ -31,9 +37,6 @@ class ProjectRepository implements ProjectRepositoryInterface
     {
         return $project->delete();
     }
-
-
-
 
     public function getPaginated($perPage = 10)
     {

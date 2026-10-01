@@ -5,23 +5,35 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Discussion\StoreProjectDiscussionRequest;
 use App\Http\Resources\Api\ProjectDiscussionResource;
-use App\Models\Project;
+use App\Models\ProjectDiscussion;
 use App\Services\ProjectDiscussionService;
+use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ProjectDiscussionController extends Controller
 {
-    protected $discussionService;
+    use AuthorizesRequests;
 
-    public function __construct(ProjectDiscussionService $discussionService)
-    {
+    protected ProjectDiscussionService $discussionService;
+    protected ProjectService $projectService;
+
+    public function __construct(
+        ProjectDiscussionService $discussionService,
+        ProjectService $projectService
+    ) {
         $this->discussionService = $discussionService;
+        $this->projectService = $projectService;
     }
 
-    // جلب مناقشات مشروع معين
+    // عرض مناقشات المشروع
     public function index(int $projectId): JsonResponse
     {
+        $project = $this->projectService->getProjectDetails($projectId);
+
+        // التحقق عبر الـ Policy (viewAny)
+        $this->authorize('viewAny', [ProjectDiscussion::class, $project]);
+
         $discussions = $this->discussionService->getProjectDiscussions($projectId);
 
         return response()->json([
@@ -31,13 +43,16 @@ class ProjectDiscussionController extends Controller
         ]);
     }
 
-    // إرسال رسالة أو ملف جديد عبر الـ API
-    public function store(StoreProjectDiscussionRequest $request, Project $project): JsonResponse
+    // إرسال رسالة جديدة
+    public function store(StoreProjectDiscussionRequest $request, int $projectId): JsonResponse
     {
-        $file = $request->file('file');
+        $project = $this->projectService->getProjectDetails($projectId);
 
-        // استدعاء نفس السيرفيس تماماً! (Clean Architecture قوة إعادة الاستخدام)
-        $discussion = $this->discussionService->storeDiscussion($project, $request->validated(), $file);
+        // التحقق عبر الـ Policy (create)
+        $this->authorize('create', [ProjectDiscussion::class, $project]);
+
+        $file = $request->file('file');
+        $discussion = $this->discussionService->storeDiscussion($projectId, $request->validated(), $file);
 
         return response()->json([
             'status' => true,
@@ -46,11 +61,17 @@ class ProjectDiscussionController extends Controller
         ], 201);
     }
 
-
-    public function destroy(Request $request, int $id): JsonResponse
+    // حذف الرسالة
+    public function destroy(int $projectId, int $discussionId): JsonResponse
 {
-    // تمرير رقم الرسالة ومعرف المستخدم الحالي مباشرة للسيرفيس
-    $this->discussionService->delete($id, $request->user()->id);
+    // 1. جلب النقاش مع التحقق الأمني الكامل أنه يتبع للـ projectId الموجود بالروت
+    $discussion = $this->discussionService->getDiscussionDetailsForProject($projectId, $discussionId);
+
+    // 2. فحص الصلاحية عبر الـ Policy
+    $this->authorize('delete', $discussion);
+
+    // 3. الحذف الآمن بالمعرفين
+    $this->discussionService->deleteDiscussion($projectId, $discussionId);
 
     return response()->json([
         'status' => true,

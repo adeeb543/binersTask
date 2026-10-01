@@ -2,12 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\ProjectDiscussion;
 use App\Repositories\ProjectDiscussionRepositoryInterface;
+use App\Traits\HasFiles;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProjectDiscussionService
 {
-    protected $discussionRepository;
+    use HasFiles;
+
+    protected ProjectDiscussionRepositoryInterface $discussionRepository;
 
     public function __construct(ProjectDiscussionRepositoryInterface $discussionRepository)
     {
@@ -19,39 +24,55 @@ class ProjectDiscussionService
         return $this->discussionRepository->getByProjectId($projectId);
     }
 
-    public function storeDiscussion($project, array $data, $file = null, $sender = null)
-{
-    unset($data['file']);
+    // جلب تفاصيل النقاش مع التحقق الإجباري من تطابق الـ projectId
+    public function getDiscussionDetailsForProject(int $projectId, int $discussionId): ProjectDiscussion
+    {
+        $discussion = $this->discussionRepository->findByProjectAndId($projectId, $discussionId);
 
-    // معالجة رفع الملف إن وجد
-    if ($file) {
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('discussions_files', $fileName, 'public');
+        if (! $discussion) {
+            throw new NotFoundHttpException('الرسالة غير موجودة ضمن هذا المشروع.');
+        }
 
-        $data['file_name'] = $file->getClientOriginalName();
-        $data['file_path'] = $filePath;
+        return $discussion;
     }
 
-    $data['project_id'] = $project->id;
+    public function storeDiscussion(int $projectId, array $data, $file = null, $sender = null): ProjectDiscussion
+    {
+        unset($data['file']);
 
-    // إذا لم يتم تمرير المرسل، نحاول معرفته تلقائياً من الـ Auth (سواء Admin أو User)
-    if (!$sender) {
-        $sender = Auth::guard('admin')->user() ?? Auth::user();
+        if ($file) {
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('discussions_files', $fileName, 'public');
+
+            $data['file_name'] = $file->getClientOriginalName();
+            $data['file_path'] = $filePath;
+        }
+
+        $data['project_id'] = $projectId;
+
+        if (!$sender) {
+            $sender = Auth::guard('admin')->user() ?? Auth::user();
+        }
+
+        if ($sender) {
+            $data['sender_id'] = $sender->id;
+            $data['sender_type'] = get_class($sender);
+        }
+
+        return $this->discussionRepository->create($data);
     }
 
-    // تأكد أن المرسل موجود فعلاً لمنع الأخطاء
-    if ($sender) {
-        $data['sender_id'] = $sender->id;
-        $data['sender_type'] = get_class($sender);
+    public function deleteDiscussion(int $projectId, int $discussionId): bool
+    {
+        // 1. التحقق وجلب النقاش بالمعرفين صريحين
+        $discussion = $this->getDiscussionDetailsForProject($projectId, $discussionId);
+
+        // 2. حذف الملف المرفق إن وجد
+        if ($discussion->file_path) {
+            $this->deleteFile($discussion->file_path);
+        }
+
+        // 3. الحذف الآمن عبر الريبو
+        return $this->discussionRepository->deleteByProjectAndId($projectId, $discussionId);
     }
-
-    return $this->discussionRepository->create($data);
-}
-
-
-    public function delete(int $id)
-{
-    $discussion = $this->discussionRepository->getByProjectId($id); // تأكد أن لديك دالة find في الريبوستري، أو استخدم Model::find($id)
-    return $this->discussionRepository->delete($id);
-}
 }

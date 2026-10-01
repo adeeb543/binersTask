@@ -32,16 +32,18 @@ Route::controller(AuthController::class)->prefix('auth')
     Route::get('/{id}', 'show')->name('show');
     Route::post('/{id}',  'update')->name('update');
     Route::delete('/{id}', 'destroy')->name('destroy');
-});
 
-Route::controller(ProjectFileController::class)
-    ->middleware('auth:sanctum')
-    ->prefix('projects/{projectId}/files')
-    ->group(function () {
+        Route::controller(ProjectFileController::class)
+        ->middleware('auth:sanctum')
+        ->prefix('/{id}/files')
+        ->group(function () {
         Route::post('/', 'store');
        // Route::get('/{fileId}/download', 'download');
         Route::delete('/{fileId}', 'destroy');
-    });
+        });
+});
+
+
 
 
 
@@ -51,6 +53,8 @@ Route::controller(ProjectFileController::class)
     ->group(function () {
     Route::get('/', 'index');
     Route::post('/',  'store');
+    Route::delete('/{id}',  'destroy');
+
 });
 
 
